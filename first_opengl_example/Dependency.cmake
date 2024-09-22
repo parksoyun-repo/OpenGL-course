@@ -24,6 +24,7 @@ set(DEP_LIBS ${DEP_LIBS} spdlog$<$<CONFIG:Debug>:d>) # $< : cmake에서 제공�
 # Config가 debug일때는 d를 붙이고, 아니면 붙이지 말아라(ex)spdlog.d)
 
 # glfw
+# Open-source, cross-platform library for creating windows, contexts, and surfaces, receiving input and events
 ExternalProject_Add(
     dep_glfw
     GIT_REPOSITORY "https://github.com/glfw/glfw.git"
@@ -40,3 +41,22 @@ ExternalProject_Add(
 
 set(DEP_LIST ${DEP_LIST} dep_glfw)
 set(DEP_LIBS ${DEP_LIBS} glfw3)
+
+# glad
+# GL/GLES Loader-Generator
+# OpenGL은 spec과 구현체 (driver, dll) 가 따로 존재(벤더사가 개발, 제공)
+# OpenGL 함수를 사용하기 전에 해당 함수들의 구현체가 어디 있는지 로딩하는 과정이 필요
+ExternalProject_Add(
+    dep_glad
+    GIT_REPOSITORY "https://github.com/Dav1dde/glad"
+    GIT_TAG "v0.1.34"
+    GIT_SHALLOW 1
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${DEP_INSTALL_DIR}
+        -DGLAD_INSTALL=ON
+    TEST_COMMAND ""
+    )
+set(DEP_LIST ${DEP_LIST} dep_glad)
+set(DEP_LIBS ${DEP_LIBS} glad)
