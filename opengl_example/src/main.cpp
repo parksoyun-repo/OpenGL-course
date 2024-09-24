@@ -1,5 +1,4 @@
-#include "common.h"
-#include "shader.h"
+#include "context.h"
 
 #include <spdlog/spdlog.h>
 #include <glad/glad.h> // GLFW선언 전에 선언 해야한다
@@ -28,14 +27,8 @@ void OnKeyEvent(GLFWwindow* window,
     }
 }
 
-// 렌더링 코드
-void Render() 
+int main(int argc, const char** argv) 
 {
-    glClearColor(0.1f, 0.2f, 0.3f, 0.0f); // State-setting function : 화면을 무슨 색으로 지울까? 
-    glClear(GL_COLOR_BUFFER_BIT);   // State-using function : 화면에 있는 색상 버퍼를 실제로 지움(지우는 색은 위에서 설정함)
-}
-
-int main(int argc, const char** argv) {
    SPDLOG_INFO( "Start progrm");
 
     // glfw 라이브러리 초기화, 실패하면 에러 출력후 종료
@@ -79,16 +72,20 @@ int main(int argc, const char** argv) {
     auto glVersion = glGetString(GL_VERSION);
     SPDLOG_INFO("OpenGL context version: {}", (const char*)glVersion);
 
+
+    auto context = Context::Create();
+    if (!context) 
+    {
+        SPDLOG_ERROR("failed to create context");
+        glfwTerminate();
+        return -1;
+    }
+
     // 윈도우 생성 직후에는 프레임버퍼 변경 이벤트가 발생하지 않으므로 첫 호출은 수동으로 함
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);   
     // glfwPollEvents에서 해당 이벤트가 발생하면 지정한 콜백함수를 실행하라고 지정
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
-
-    auto vertexShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);
-    auto fragmentShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER);
-    SPDLOG_INFO("vertex shader id: {}", vertexShader->Get());
-    SPDLOG_INFO("fragment shader id: {}", fragmentShader->Get());
 
     // glfw 루프 실행, 윈도우 close 버튼을 누르면 정상 종료
     SPDLOG_INFO("Start main loop");
@@ -102,10 +99,12 @@ int main(int argc, const char** argv) {
         // 2. back buffer에 그림 그리기
         // 3. front와 back을 바꿔치기
         // 이렇게 하면 그림이 그려지는 과정이 노출되지 않음
-        Render();
+        context->Render();
         glfwSwapBuffers(window);
     }
 
+    context.reset();    // context = nullptr도 같은 효과. nullptr이 되면 메모리 소유권이 없어지면서 날아간다
+    
     glfwTerminate();
 
     return 0;
